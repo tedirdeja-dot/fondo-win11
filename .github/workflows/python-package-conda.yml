@@ -1,0 +1,38 @@
+name: Build Python Executable
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout del código
+      uses: actions/checkout@v4
+
+    - name: Configurar Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip' # Acelera la compilación guardando el caché de pip
+
+    - name: Instalar librerías y PyInstaller
+      run: |
+        python -m pip install --upgrade pip
+        if (Test-Path "requirements.txt") { pip install -r requirements.txt }
+        pip install pyinstaller
+
+    - name: Compilar ejecutable con librerías y recursos
+      run: |
+        pyinstaller --onefile --clean --noconsole --hidden-import=pandas --hidden-import=PIL --add-data "assets;assets" --name="MiPrograma" main.py
+
+    - name: Subir ejecutable generado
+      uses: actions/upload-artifact@v4
+      with:
+        name: Windows-Executable
+        path: dist/*.exe
